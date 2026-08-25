@@ -1,89 +1,64 @@
-# Developer Runbook – dog-vs-cat-cnn
+# Developer Runbook for dog-vs-cat-cnn
 
 ## Prerequisites
-- Git
-- Python 3.8+
-- pip
+- Python 3.9 or later installed
+- Git installed
 - Virtual environment tool (venv or conda)
-- Access to a GPU (optional but recommended for training)
-- Dataset of dog and cat images (e.g., Kaggle Dogs vs Cats) placed in a directory referenced by the code
-
-## Environment Variables
-| Variable | Status | Description |
-| :--- | :--- | :--- |
-| `DATA_DIR` | Required | Absolute or relative path to the root folder that contains the `train` and `test` sub‑folders with dog and cat images. |
-
+- Optional: NVIDIA GPU with CUDA drivers for GPU acceleration
 
 ## Local Setup & Development
-1. 1. Clone the repository:
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. Create and activate a virtual environment:
-3.    - Using `venv`:
-     ```bash
-     python -m venv .venv
-     source .venv/bin/activate   # Linux/macOS
-     .\\venv\\Scripts\\activate   # Windows
-     ```
-4.    - Or using `conda`:
-     ```bash
-     conda create -n dogcat python=3.8
-     conda activate dogcat
-     ```
-5. 3. Install required Python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-6. 4. Verify that the required image data is available:
-7.    - The code expects a directory structure similar to:
-     ```
-     data/
-       train/
-         dogs/
-         cats/
-       test/
-         dogs/
-         cats/
-     ```
-   - Adjust the `DATA_DIR` path in `src/convolutional_neural_network.py` if you place the data elsewhere.
-8. 5. (Optional) If you have a CUDA‑enabled GPU and want to use it, ensure that the appropriate `torch` version is installed. The `requirements.txt` pins `torch` without CUDA; replace it with e.g. `torch==2.2.0+cu118` from the official PyTorch channel and reinstall.
-9. 6. Launch the exploratory notebook to confirm the environment works:
-   ```bash
-   jupyter notebook src/notebooks/convolutional_neural_network.ipynb
-   ```
+1. 1. Clone the repository
+2.    ```bash
+3.    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+4.    cd dog-vs-cat-cnn
+5.    ```
+6. 2. Create and activate a virtual environment
+7.    - Using **venv**:
+8.      ```bash
+9.      python -m venv .venv
+10.      source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+11.      ```
+12.    - Or using **conda**:
+13.      ```bash
+14.      conda create -n dog-cat-cnn python=3.9
+15.      conda activate dog-cat-cnn
+16.      ```
+17. 3. Install the required Python packages
+18.    ```bash
+19.    pip install -r requirements.txt
+20.    ```
+21. 4. (Optional) Verify GPU availability
+22.    ```bash
+23.    python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
+24.    ```
+25. 5. Launch Jupyter Notebook for interactive experimentation
+26.    ```bash
+27.    jupyter notebook src/notebooks/convolutional_neural_network.ipynb
+28.    ```
+29. 6. Run the training script directly (if you prefer CLI)
+30.    ```bash
+31.    python src/convolutional_neural_network.py
+32.    ```
 
 ## Running Tests
 ```bash
-No automated unit tests are shipped with this repository. Validation is performed by running a short training session or by executing the notebook cells. Example manual test:
-```bash
-python - <<'PY'
-import torch
-from src.convolutional_neural_network import CatDogCNN
-model = CatDogCNN()
-# Create a dummy batch: 4 RGB images of size 128x128
-x = torch.randn(4, 3, 128, 128)
-logits = model(x)
-print('Logits shape:', logits.shape)
-PY
-```
+There are no dedicated unit tests in this repository. Validation is performed by running the training script or the notebook and confirming that the model trains without errors.
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'src'
-**Resolution:** Make sure you are executing commands from the repository root or add the project root to PYTHONPATH:
-```bash
-export PYTHONPATH=$(pwd)
-```
+### ImportError: No module named 'torch' (or any other dependency)
+**Resolution:** Make sure the virtual environment is activated and all dependencies are installed with `pip install -r requirements.txt`. If you are using a new terminal, reactivate the environment.
 
-### torch.cuda.is_available() returns False even though a GPU is present
-**Resolution:** Install a CUDA‑compatible build of PyTorch. Replace the `torch` entry in `requirements.txt` with the version matching your CUDA toolkit, e.g. `torch==2.2.0+cu118`, then run `pip install -r requirements.txt` again.
+### CUDA not detected despite having an NVIDIA GPU
+**Resolution:** Install the matching CUDA toolkit and cuDNN versions for your PyTorch build. Refer to the PyTorch "Get Started" page for the correct pip wheel, e.g., `pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118` for CUDA 11.8.
 
-### FileNotFoundError when loading images
-**Resolution:** Confirm that the `DATA_DIR` environment variable points to the correct location and that the expected `train`/`test` sub‑folders exist. Adjust the path in `convolutional_neural_network.py` if needed.
+### Jupyter notebook fails to start or cannot find the kernel
+**Resolution:** Ensure the notebook is launched from within the activated virtual environment. If using conda, run `conda install ipykernel && python -m ipykernel install --user --name dog-cat-cnn`.
 
-### Jupyter kernel crashes while running the notebook
-**Resolution:** Check memory usage – training a CNN on the full Dogs vs Cats dataset can exceed typical laptop RAM. Reduce the batch size in the notebook (e.g., `batch_size = 16`) or work with a smaller subset of the data.
+### MemoryError during training on large batch sizes
+**Resolution:** Reduce the `batch_size` parameter in the training script/notebook or switch to a GPU with more VRAM. Alternatively, enable gradient accumulation to simulate larger batches.
+
+### Training loss does not decrease (model not learning)
+**Resolution:** Check that the dataset path is correct and that the data loader is properly shuffling data. Verify learning rate and optimizer settings in `convolutional_neural_network.py`.
 
 

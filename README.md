@@ -1,18 +1,18 @@
 # Dog vs Cat CNN
 
-A Python monolithic data‑science project that builds and evaluates a convolutional neural network for binary dog‑vs‑cat image classification.
+A simple CNN for binary classification of dog and cat images.
 
 ## Overview
 
-This repository contains a self‑contained implementation of a convolutional neural network (CNN) that classifies images as either dogs or cats. The core model logic lives in `src/convolutional_neural_network.py`, while the Jupyter notebook `src/notebooks/convolutional_neural_network.ipynb` provides step‑by‑step exploratory data analysis, model training, validation, and visualisation of results. The project is packaged with a `requirements.txt` file for reproducible dependency management, making it straightforward to set up and run on any machine with Python installed.
+This monolithic Python project demonstrates how to build, train, and evaluate a convolutional neural network that distinguishes between dog and cat pictures. The workflow is organized under `src/` with separate modules for data preparation, model definition, and training/evaluation, while an interactive Jupyter notebook ties everything together for rapid experimentation and visualisation.
 
 ## Features
 
-- Fully‑implemented CNN architecture for binary image classification in `src/convolutional_neural_network.py`.
-- End‑to‑end workflow notebook (`src/notebooks/convolutional_neural_network.ipynb`) covering data loading, preprocessing, training, evaluation, and result visualisation.
-- Explicit dependency list in `requirements.txt` (TensorFlow/Keras, NumPy, pandas, matplotlib, scikit‑learn, etc.).
-- Clear separation of concerns: model definition, training utilities, and analysis live in the `src/` package, while the notebook orchestrates the pipeline.
-- Reproducible environment setup using virtual environments or Conda.
+- Data preparation pipeline that loads images, resizes to a uniform shape, normalises pixel values, and optionally applies augmentation (flip, rotation, zoom).
+- A clean `ConvolutionalNeuralNetwork` class in `src/convolutional_neural_network.py` that stacks convolution, ReLU, max‑pooling, and fully‑connected layers for binary classification.
+- Training loop with cross‑entropy loss, Adam optimizer, real‑time accuracy reporting, early‑stopping, and model checkpointing of the best validation score.
+- Comprehensive evaluation utilities that compute final loss/accuracy and generate confusion matrices and ROC curves.
+- Interactive Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) that walks through data loading, model instantiation, training, and visualisation of predictions and metrics.
 
 ## Quick Start
 
@@ -24,21 +24,26 @@ cd dog-vs-cat-cnn
 
 # Create a virtual environment (optional but recommended)
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+source venv/bin/activate  # on Windows use `venv\Scripts\activate`
 
 # Install dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
 
-# Launch the notebook to run the full workflow
+# Run the training script (example)
+python - <<EOF
+from src.convolutional_neural_network import ConvolutionalNeuralNetwork, train_model, evaluate_model
+# Adjust paths and hyper‑parameters as needed
+train_model(data_dir='data/train', val_dir='data/val', epochs=20, batch_size=32)
+EOF
+
+# Or launch the interactive notebook for experimentation
 jupyter notebook src/notebooks/convolutional_neural_network.ipynb
 ```
-
 ```
 
 ## Architecture
 
-Monolithic data‑science architecture: all code resides under the `src/` directory, with the Jupyter notebook acting as the orchestrator for the data pipeline. The project does not split into separate services; instead, model definition, training loops, and utilities are tightly coupled in a single codebase, typical for research‑oriented machine‑learning projects.
+The codebase follows a monolithic architecture: all functionality lives in the `src/` package, with clear logical separation into modules (data preparation, model definition, training/evaluation). The notebook imports these modules, orchestrating the end‑to‑end pipeline without any micro‑service boundaries.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

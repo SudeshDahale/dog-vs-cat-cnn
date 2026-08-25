@@ -1,48 +1,56 @@
 # Technical Architecture Guide for dog-vs-cat-cnn
 
 ## System Overview
-The **dog-vs-cat-cnn** repository implements a binary image classification solution (dog vs cat) using a Convolutional Neural Network (CNN) built in pure Python. The codebase follows a monolithic, data‑science style architecture: all core logic lives under the **src/** package, while exploratory analysis, model training, and evaluation are performed interactively in a Jupyter notebook. The solution is intended for research and prototype‑level workloads and can be scaled to larger datasets or production environments with modest refactoring.
+The *dog-vs-cat-cnn* repository implements a monolithic Python application for binary image classification (dog vs cat) using a convolutional neural network (CNN). The codebase is organized under a single `src/` package and an accompanying Jupyter notebook for interactive experimentation. Core responsibilities are divided into four logical modules: Data Preparation, CNN Model Definition, Training & Evaluation, and an Interactive Notebook that orchestrates the workflow.
+
+Key entry points are:
+- `src/convolutional_neural_network.py` – defines the CNN class, data preprocessing utilities, and training loop.
+- `src/notebooks/convolutional_neural_network.ipynb` – loads the module, prepares data, trains the model, and visualizes results.
+
+All dependencies are declared in `requirements.txt` and documented in `README.md`.
 
 ## System Layers
-### Data Ingestion & Pre‑processing
-**Technologies:** Python, NumPy, Pillow (PIL), scikit‑learn (train_test_split)
+### Data Layer
+**Technologies:** Python, NumPy, Pillow/OpenCV (image handling)
 
-Handles file system traversal, image decoding, resizing, normalisation and optional augmentation. Implemented in pure Python functions inside `src/convolutional_neural_network.py`.
+Handles raw image ingestion, resizing, normalization, and data augmentation. Implemented as utility functions within `src/convolutional_neural_network.py`. Provides NumPy/TensorFlow‑compatible tensors for downstream consumption.
 
-### Model Definition & Training
-**Technologies:** TensorFlow, Keras, Python
+### Model Layer
+**Technologies:** Python, TensorFlow/Keras or PyTorch (depending on imports)
 
-Encapsulates the CNN architecture, loss function, optimizer, and training loop. Uses a high‑level deep‑learning API (TensorFlow/Keras) declared in `requirements.txt`.
+Defines the CNN architecture as a Python class. Encapsulates convolutional blocks, pooling layers, dropout (if present), and the final dense layer that outputs a single sigmoid probability for binary classification.
 
-### Evaluation & Experimentation
-**Technologies:** Jupyter Notebook, matplotlib, seaborn, pandas
+### Training & Evaluation Layer
+**Technologies:** Python, TensorFlow/Keras or PyTorch, NumPy
 
-Interactive analysis performed in the Jupyter notebook. Loads the trained model, runs predictions, visualises results, and records experiment metrics.
+Implements the training loop, loss calculation, optimizer steps, metric tracking, and model checkpointing. Also contains evaluation logic for computing accuracy on a validation split.
 
-### Orchestration & Utilities
-**Technologies:** Python standard library (logging, argparse)
+### Presentation / Interaction Layer
+**Technologies:** Jupyter Notebook, Python, Matplotlib/Seaborn (visualisation)
 
-Utility functions for logging, checkpointing, and command‑line execution. All utilities are co‑located in the monolithic `src/` package to keep the prototype simple.
+The Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) provides a user‑friendly interface to orchestrate the data pipeline, train the model, and visualize results (loss curves, sample predictions). It imports the monolithic module, re‑uses its functions, and adds markdown explanations for experiment documentation.
 
 
 
 ## Data Flow & Pipelines
-1. **Data Acquisition** – Raw image files (dog and cat photos) are placed in a local directory structure (e.g., `data/train/dog`, `data/train/cat`).\n2. **Pre‑processing** – The script `src/convolutional_neural_network.py` loads images, resizes them to a fixed shape, normalises pixel values, and optionally applies augmentation. The processed arrays are split into training/validation sets.\n3. **Model Construction** – A CNN architecture is defined in the same module, using Keras/TensorFlow layers (or an equivalent deep‑learning backend as declared in `requirements.txt`).\n4. **Training** – The model is compiled with a binary‑cross‑entropy loss and fitted on the pre‑processed tensors. Callbacks such as `ModelCheckpoint` and `EarlyStopping` may be employed.\n5. **Evaluation** – After training, the notebook `src/notebooks/convolutional_neural_network.ipynb` loads the saved model, runs inference on a hold‑out test set, and computes metrics (accuracy, ROC‑AUC, confusion matrix). Visualisations of predictions are rendered inline.\n6. **Inference (optional)** – The trained model can be loaded in a Python script to classify new images on demand.
+1. **Data Ingestion** – Image files (dogs and cats) are read from the local filesystem by the Data Preparation utilities. Files are loaded using Python's standard I/O and image libraries (e.g., Pillow/ OpenCV) as indicated by the resizing and normalization steps.
+2. **Pre‑processing** – Each image is resized to a fixed dimension, pixel values are normalized, and optional augmentation (flip, rotate, etc.) is applied to increase training diversity.
+3. **Model Construction** – The CNN Model Definition module builds a sequential stack of convolution, activation, pooling, and fully‑connected layers for binary classification.
+4. **Training Loop** – The Training & Evaluation component iterates over pre‑processed batches, computes loss (e.g., binary cross‑entropy), updates weights via back‑propagation, and tracks accuracy metrics.
+5. **Checkpointing** – The best‑performing model weights are saved to disk as a checkpoint file.
+6. **Evaluation & Visualization** – After training, the notebook loads the checkpoint, runs inference on a validation set, and visualizes predictions and performance curves.
+
+The entire pipeline runs within a single Python process, driven either by script execution (`python src/convolutional_neural_network.py`) or interactively via the notebook.
 
 ## Key Design Decisions
-- Monolithic layout under `src/` – simplifies dependency management for a research prototype and avoids the overhead of a micro‑service split.
-- Single‑file CNN implementation – keeps the model definition readable and reduces the cognitive load for newcomers.
-- Use of Jupyter notebook for EDA and model validation – enables rapid iteration, visual feedback, and easy sharing of results with stakeholders.
-- Binary classification with a single sigmoid output – aligns with the problem statement (dog vs cat) and reduces model complexity.
-- Explicit checkpointing of the best model – ensures reproducibility and provides a fallback for later inference without retraining.
+- Monolithic organization – all code resides under a single `src/` package, simplifying dependency management for a small research‑oriented project.
+- Separation of concerns via logical modules (data, model, training) while keeping them in the same file for ease of experimentation.
+- Use of a notebook for interactive exploration rather than a separate UI service, aligning with typical data‑science workflows.
+- Checkpointing the best model based on validation accuracy to avoid over‑fitting and enable later inference without retraining.
 
 ## Scalability & Reliability
-Although the repository is designed as a prototype, several avenues exist to scale the solution:
-
-* **Data Volume** – Replace in‑memory NumPy arrays with `tf.data.Dataset` pipelines or TensorFlow `TFRecord` files to stream large image collections without exhausting RAM.
-* **Compute Resources** – Leverage GPU acceleration by running the training script on a machine with CUDA‑enabled TensorFlow. The code can be launched inside Docker containers or on managed services such as Google AI Platform.
-* **Modularisation** – Extract the data pipeline, model definition, and training logic into separate packages or modules. This makes unit testing easier and supports reuse in other computer‑vision projects.
-* **Hyper‑parameter Search** – Integrate with libraries such as `Keras Tuner` or `Optuna` to automate experimentation at scale.
-* **Production Deployment** – Export the trained model to TensorFlow SavedModel or ONNX format and serve it via TensorFlow Serving, FastAPI, or a lightweight Flask endpoint.
-
-By addressing these points, the codebase can evolve from a research notebook into a production‑ready image‑classification service.
+The current monolith is suitable for prototype scale and runs on a single workstation or GPU. To scale:
+- **Data Size** – Introduce `tf.data`/`torch.utils.data.DataLoader` pipelines with sharding and prefetching to handle larger image collections.
+- **Compute** – Leverage multi‑GPU training via `tf.distribute.MirroredStrategy` or PyTorch `DistributedDataParallel`.
+- **Modularization** – Split the repository into separate packages (e.g., `data`, `model`, `train`) and expose a CLI for batch training, facilitating CI/CD pipelines.
+- **Deployment** – Export the trained checkpoint to a portable format (SavedModel, ONNX) and serve via a lightweight inference service (Flask/FastAPI) if production use is required.

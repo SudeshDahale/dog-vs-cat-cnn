@@ -1,34 +1,43 @@
-# dog-vs-cat-cnn
+# Dog vs Cat CNN
 
-A simple convolutional neural network for classifying dog and cat images.
+A monolithic Python project that trains a convolutional neural network to classify dog and cat images.
 
 ## Overview
 
-This repository provides a lightweight implementation of a convolutional neural network (CNN) that distinguishes between dog and cat images. The core model and training logic live in `src/convolutional_neural_network.py`, while an accompanying Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) offers an interactive environment for experimenting with the model, visualizing training curves, and testing predictions.
+This repository provides a complete end‑to‑end pipeline for binary image classification of dogs vs. cats. It ingests and preprocesses image data, defines a CNN model using PyTorch, and runs batch‑processed training and evaluation loops. All code lives under a single `src/` package, making it simple to run the entire workflow from the command line or a Jupyter notebook.
 
 ## Features
 
-- Defines a CNN architecture using only standard Python ML libraries (TensorFlow/Keras or PyTorch).
-- Training script that loads image data, applies augmentation, and reports accuracy and loss.
-- Utility functions for preprocessing images and saving/loading model checkpoints.
-- Jupyter notebook UI for step‑by‑step experimentation, visualizing sample images, training progress, and inference on custom images.
+- Data ingestion and preprocessing with automatic resizing, normalization, and train/validation split.
+- CNN model definition using PyTorch, including configurable layers and activation functions.
+- Training loop with batch processing, loss/accuracy monitoring, and model checkpoint saving.
+- Evaluation script that reports final validation accuracy and visualizes sample predictions.
+- Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) demonstrating the full workflow step‑by‑step.
 
 ## Quick Start
 
 ```bash
+```bash
+# Clone the repository
 git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
 cd dog-vs-cat-cnn
-python -m venv venv
-source venv/bin/activate  # on Windows use `venv\Scripts\activate`
+
+# Set up a virtual environment (optional but recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+# Install dependencies
 pip install -r requirements.txt
-python src/convolutional_neural_network.py  # runs training with default settings
-# Optional: launch the notebook for interactive exploration
-jupyter notebook src/notebooks/convolutional_neural_network.ipynb
+
+# Run the training script (default will download data, train, and evaluate)
+python src/convolutional_neural_network.py
+```
+
 ```
 
 ## Architecture
 
-Monolithic Python package focused on ML training. The `src` directory houses all model definitions, training loops, and utility code, while the notebook provides a UI layer on top of the same codebase, keeping the entire project self‑contained.
+The project follows a monolithic, batch‑processing architecture. All components—data handling, model definition, training, and evaluation—are implemented as Python modules within the `src/` directory and are executed sequentially in a single process. Data is loaded once, preprocessed in memory, and then fed to the model in batches during training, making the workflow straightforward and reproducible.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

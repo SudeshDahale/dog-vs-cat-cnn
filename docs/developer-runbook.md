@@ -1,76 +1,77 @@
-# Dog vs Cat CNN - Developer Runbook
+# Dog vs Cat CNN – Developer Runbook
 
 ## Prerequisites
-- Git
-- Python 3.8+
-- Virtual environment tool (venv, virtualenv, or conda)
-- Jupyter Notebook (optional for exploratory notebook)
-- Access to a GPU is optional but recommended for faster training
+- Python 3.8+ installed on the development machine
+- Git for version control
+- Virtual environment tool (venv or conda) to isolate dependencies
+- Access to the dataset (e.g., Kaggle Dogs vs Cats) – placed in a local `data/` directory as described in the README
+- Optional: Jupyter Notebook support for interactive experimentation
+
+## Environment Variables
+| Variable | Status | Description |
+| :--- | :--- | :--- |
+| `DATA_DIR` | Optional | Absolute or relative path to the folder containing the `train` and `test` sub‑folders with dog and cat images. |
+| `MODEL_SAVE_PATH` | Optional | Path where the trained CNN model (`.h5` file) will be persisted. Defaults to `models/` if not set. |
+
 
 ## Local Setup & Development
-1. 1. Clone the repository
+1. 1. Clone the repository:
 2.    ```
 3.    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
 4.    cd dog-vs-cat-cnn
 5.    ```
-6. 2. Create and activate a virtual environment
-7.    ```
-8.    python -m venv .venv
-9.    # On macOS/Linux
-10.    source .venv/bin/activate
-11.    # On Windows
-12.    .venv\Scripts\activate
-13.    ```
-14. 3. Install the required Python packages
-15.    ```
-16.    pip install -r requirements.txt
-17.    ```
-18. 4. (Optional) Install Jupyter kernel for the virtual environment
-19.    ```
-20.    pip install ipykernel
-21.    python -m ipykernel install --user --name=dogcat-cnn
-22.    ```
-23. 5. Verify the package installation
-24.    ```
-25.    python -c "import tensorflow as tf; print(tf.__version__)"
-26.    ```
-27. 6. Prepare the image dataset (dog vs. cat). The training scripts expect a directory structure like:
-28.    ```
-29.    data/
-30.    ├── train/
-31.    │   ├── dogs/
-32.    │   └── cats/
-33.    └── validation/
-34.        ├── dogs/
-35.        └── cats/
-36.    ```
-37.    Place your dataset accordingly or modify the path arguments in `src/convolutional_neural_network.py`.
-38. 7. Run the training engine (see *Local Development Loop* below).
+6. 2. Create and activate a virtual environment:
+7.    - Using `venv`:
+8.      ```
+9.      python -m venv .venv
+10.      source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+11.      ```
+12.    - Or using `conda`:
+13.      ```
+14.      conda create -n dogcat python=3.8
+15.      conda activate dogcat
+16.      ```
+17. 3. Install required Python packages:
+18.    ```
+19.    pip install -r requirements.txt
+20.    ```
+21.    The `requirements.txt` lists core libraries such as `tensorflow`/`keras`, `numpy`, `pandas`, `matplotlib`, and `jupyter`.
+22. 4. Verify the installation:
+23.    ```
+24.    python -c "import tensorflow as tf; print('TF version:', tf.__version__)"
+25.    ```
+26. 5. (Optional) Launch Jupyter Lab/Notebook for the exploratory notebook:
+27.    ```
+28.    jupyter notebook src/notebooks/convolutional_neural_network.ipynb
+29.    ```
 
 ## Running Tests
 ```bash
-There are no dedicated unit‑test suites in this repository. To validate the pipeline you can execute a quick end‑to‑end run:
+The project does not contain a separate test suite, but you can run a quick sanity check by training the model on a small subset:
 ```bash
-python src/convolutional_neural_network.py \
-    --train_dir data/train \
-    --val_dir data/validation \
-    --epochs 1 \
-    --batch_size 32
+python src/convolutional_neural_network.py --epochs 1 --batch-size 32 --subset 0.1
 ```
-If the script completes without errors and prints training/validation accuracy, the environment is correctly set up.
+This script will:
+- Load data from `DATA_DIR` (or the default `data/` folder).
+- Build the CNN defined in `src/convolutional_neural_network.py`.
+- Train for 1 epoch on 10 % of the data.
+- Save the model to `MODEL_SAVE_PATH` (or `models/`).
+If the script finishes without errors, the development environment is correctly configured.
+
+For notebook‑based verification, run the cells in `src/notebooks/convolutional_neural_network.ipynb` and ensure the training loss decreases.
 ```
 
 ## Troubleshooting
 ### ImportError: No module named 'tensorflow'
-**Resolution:** Ensure the virtual environment is activated and `requirements.txt` was installed successfully. Re‑run `pip install -r requirements.txt`.
+**Resolution:** Make sure the virtual environment is activated and `tensorflow` is installed. Re‑run `pip install -r requirements.txt`. If you are on a GPU machine, install the GPU‑compatible package (`tensorflow-gpu`).
 
-### FileNotFoundError: Dataset directory not found
-**Resolution:** Verify that the dataset follows the expected folder layout and that the paths passed to the script match the actual locations.
+### MemoryError or OOM during model training
+**Resolution:** Reduce `batch-size` (e.g., `--batch-size 16`) or use a smaller image size in the data loader. Alternatively, run the training on a machine with more RAM or a GPU.
 
-### MemoryError or OOM on CPU
-**Resolution:** Reduce `batch_size` or `image_size` arguments, or run the script on a machine with a GPU. Install GPU‑enabled TensorFlow if a compatible GPU is available.
+### FileNotFoundError: data directory not found
+**Resolution:** Set the `DATA_DIR` environment variable to point to the location of the Dogs vs Cats dataset, or place the dataset under the repository's `data/` folder as described in the README.
 
-### Jupyter notebook cannot import local modules
-**Resolution:** Launch the notebook from the repository root (`jupyter notebook`) so that `src/` is on the Python path, or add `import sys, os; sys.path.append(os.path.abspath('../src'))` at the top of the notebook.
+### Jupyter notebook kernel dies when executing the training cell
+**Resolution:** Ensure the notebook is using the same Python kernel as the virtual environment. In Jupyter, select the kernel from `.venv/bin/python` (or the conda environment). Restart the kernel after any package changes.
 
 

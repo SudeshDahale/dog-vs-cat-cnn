@@ -1,43 +1,46 @@
-# Technical Architecture Guide – Dog vs Cat CNN
+# Technical Architecture Guide for Dog vs Cat CNN
 
 ## System Overview
-This repository implements a binary image classification model that distinguishes between dogs and cats using a convolutional neural network (CNN) built with Python deep‑learning libraries (PyTorch/Keras). The code is organized as a monolithic, batch‑processing application that runs end‑to‑end from data ingestion through model training and evaluation. All core components reside under the `src/` package, with a Jupyter notebook for exploratory analysis and a README that documents usage and dependencies.
+The **dog-vs-cat-cnn** repository implements a monolithic machine‑learning pipeline for binary image classification (dog vs cat) using a convolutional neural network (CNN). All components—data preprocessing, model definition, training, evaluation, and interactive inference—are written in Python and reside under the `src/` package, with an accompanying Jupyter notebook for exploratory analysis. The architecture follows a straightforward, end‑to‑end flow suitable for small‑to‑medium sized image datasets and can be executed on a single workstation with optional GPU acceleration.
 
 ## System Layers
-### Data Ingestion & Preprocessing
-**Technologies:** Python, Pillow/OpenCV, torchvision.transforms / tf.keras.preprocessing
+### Data Preprocessing Layer
+**Technologies:** Python, PyTorch, torchvision.transforms, Pillow (PIL)
 
-Handles loading of raw image files, resizing to a fixed resolution, normalizing pixel intensity, and splitting the dataset into train/validation subsets. Implemented with Python's `os`, `glob`, `PIL`/`opencv`, and `torchvision.transforms` (or `tf.keras.preprocessing.image`).
+Loads image files from the filesystem, performs resizing to a fixed input size, normalizes pixel values to the range expected by the CNN, and constructs PyTorch `Dataset` and `DataLoader` objects. Handles deterministic train/validation splitting.
 
-### Model Definition
-**Technologies:** Python, PyTorch, Keras (TensorFlow backend)
+### Model Definition Layer
+**Technologies:** Python, PyTorch
 
-Encapsulates the CNN architecture in a single module. The file `src/convolutional_neural_network.py` defines a class inheriting from `torch.nn.Module` (or `tf.keras.Model`), stacking convolutional layers, ReLU activations, max‑pooling, dropout, and a final dense layer with sigmoid output for binary classification.
+Encapsulates the convolutional neural network architecture in a subclass of `torch.nn.Module`. The network stacks convolutional layers with ReLU activations, pooling layers, and fully‑connected output layers that produce a single logit for binary classification.
 
-### Training & Evaluation
-**Technologies:** Python, PyTorch Optimizer / Keras compile‑fit API, tqdm, matplotlib
+### Training Pipeline Layer
+**Technologies:** Python, PyTorch, torch.optim, torch.nn.functional
 
-Orchestrates the batch‑processing training loop, optimizer configuration, loss computation, metric tracking, and checkpointing. Uses `torch.utils.data.DataLoader` (or `tf.data.Dataset`) to feed batches, and logs progress via `tqdm` and `matplotlib` in the notebook.
+Implements the end‑to‑end training loop: iterates over `DataLoader` batches, computes forward passes, calculates binary cross‑entropy loss, back‑propagates gradients, updates weights via an optimizer, and saves model checkpoints. Logs epoch‑level loss and accuracy for monitoring.
+
+### Evaluation & Inference Layer
+**Technologies:** Python, PyTorch, Jupyter Notebook, matplotlib/seaborn (optional)
+
+Runs the trained model on held‑out validation data to compute final performance metrics. Provides a Jupyter notebook for ad‑hoc inference on user‑supplied images, visualizing predictions alongside ground‑truth labels.
 
 
 
 ## Data Flow & Pipelines
-1. **Data Ingestion** – Image files are read from a local directory (or dataset path) using standard Python I/O utilities. 2. **Preprocessing** – Each image is resized to a uniform shape, pixel values are normalized, and optional data augmentations are applied. 3. **Dataset Split** – The preprocessed dataset is shuffled and split into training and validation (test) sets. 4. **Model Definition** – `src/convolutional_neural_network.py` constructs a CNN architecture (convolution → pooling → fully‑connected layers) using either PyTorch `torch.nn.Module` or Keras `tf.keras.Model`. 5. **Training Loop** – A batch‑wise training loop iterates over the training set, computes loss, back‑propagates gradients, and updates weights. 6. **Evaluation** – After each epoch (or at the end), the model is evaluated on the validation set, reporting loss and accuracy metrics. 7. **Results** – Metrics and optionally model checkpoints are saved to disk for later analysis, and the notebook (`src/notebooks/convolutional_neural_network.ipynb`) visualizes training curves.
+1. **Raw Image Dataset** – Images are stored on disk (e.g., in a `data/` folder, not shown in the excerpt). 2. **Data Preprocessing** (`src/convolutional_neural_network.py`) reads each image, applies resizing, pixel‑value normalization, and assembles PyTorch `Dataset` objects. 3. **Train/Validation Split** – The preprocessing module creates deterministic splits and wraps them with `DataLoader` for batched streaming. 4. **Model Definition** – A `torch.nn.Module` subclass defines the CNN architecture (convolutional layers, pooling, fully‑connected heads). 5. **Training Pipeline** – The same script orchestrates the training loop: forward pass, loss computation (e.g., `nn.BCEWithLogitsLoss`), optimizer step (e.g., `Adam`), checkpoint saving (`torch.save`) and metric logging per epoch. 6. **Evaluation & Inference** – After training, the model is evaluated on the validation set; metrics (accuracy, loss) are reported. 7. **Interactive Notebook** (`src/notebooks/convolutional_neural_network.ipynb`) loads the saved checkpoint, runs inference on new images, and visualizes predictions.
 
 ## Key Design Decisions
-- Monolithic layout – all code lives under `src/` for simplicity, avoiding micro‑service overhead for a research‑grade prototype.
-- Batch‑processing training – model is trained on full epochs over static image batches rather than streaming or online learning, matching typical deep‑learning workflows.
-- Choice of PyTorch vs Keras – the repository supports either framework (as reflected in imports). This flexibility lets contributors experiment with their preferred library while keeping the same high‑level architecture.
-- Image resizing to a fixed size (e.g., 128×128) – reduces memory footprint and standardizes input shape across the network.
-- Normalization to [0,1] (or standard mean‑std) – accelerates convergence and aligns with pretrained weight expectations if transfer learning is introduced later.
-- Explicit train/validation split – ensures unbiased evaluation and prevents data leakage.
-- Use of a Jupyter notebook for exploratory runs – aids rapid prototyping and visual inspection of loss/accuracy curves without modifying the core script.
+- Monolithic layout under `src/` keeps the entire pipeline in a single Python module, simplifying execution for educational or prototype use.
+- Choice of PyTorch as the deep‑learning framework offers dynamic graph construction, easy debugging, and seamless GPU support.
+- Explicit train/validation split performed during preprocessing avoids data leakage and keeps the split logic transparent.
+- Model checkpointing with `torch.save` ensures training can be resumed and the best‑performing weights are preserved for inference.
+- A dedicated notebook (`src/notebooks/convolutional_neural_network.ipynb`) separates exploratory analysis from the production‑grade script, enabling rapid experimentation without modifying core code.
 
 ## Scalability & Reliability
-Although designed as a research prototype, the architecture can scale with modest adjustments:
-- **Dataset size** – Replace the in‑memory list of file paths with a lazy loader (`torch.utils.data.Dataset` or `tf.data.Dataset`) that streams images from disk, allowing millions of samples.
-- **Hardware acceleration** – Enable GPU usage by moving the model and tensors to `cuda` (PyTorch) or by setting the TensorFlow device context. Batch size can be increased proportionally to GPU memory.
-- **Distributed training** – The monolithic script can be wrapped with PyTorch `DistributedDataParallel` or TensorFlow `tf.distribute.Strategy` to run across multiple GPUs or nodes.
-- **Experiment tracking** – Integrating tools like Weights & Biases or TensorBoard would provide scalable logging and hyper‑parameter sweeps.
-- **Data augmentation pipelines** – Leveraging libraries such as Albumentations can offload augmentation to the CPU, keeping GPU utilization high.
-Overall, the current design is modular enough to adopt these enhancements without restructuring the codebase.
+The current monolithic design targets a single‑node environment. Scalability can be improved by:
+- **Data Loading:** Increase `num_workers` in `DataLoader` to parallelize image I/O and transformation.
+- **GPU Utilization:** Move tensors to a CUDA device (`.to('cuda')`) and optionally use mixed‑precision training (`torch.cuda.amp`).
+- **Model Size:** Replace the custom CNN with a deeper architecture (e.g., ResNet) while reusing the same training loop.
+- **Distributed Training:** Refactor the training pipeline to use `torch.nn.parallel.DistributedDataParallel` for multi‑GPU or multi‑node scaling.
+- **Containerization:** Wrap the pipeline in a Docker image that pins Python and library versions from `requirements.txt`, enabling reproducible deployments.
+- **Data Management:** For larger datasets, store images in an object store (e.g., S3) and stream them via `torchvision.datasets.ImageFolder` or a custom dataset that reads from the cloud.

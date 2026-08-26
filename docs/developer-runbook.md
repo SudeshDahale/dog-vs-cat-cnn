@@ -1,91 +1,77 @@
-# Dog vs Cat CNN Developer Runbook
+# Developer Runbook – dog-vs-cat-cnn
 
 ## Prerequisites
-- Git installed (>=2.20)
-- Python 3.9 or newer
-- Virtual environment tool (venv or conda)
-- Git Large File Storage (optional, if dataset stored via LFS)
-- CUDA-enabled GPU and NVIDIA drivers (optional, for GPU acceleration)
-- Internet access to install Python dependencies
+- Python 3.8+ installed on the system
+- Git client
+- Virtual environment tool (venv or virtualenv)
+- Optionally, NVIDIA GPU with CUDA toolkit if GPU acceleration is desired
 
 ## Environment Variables
 | Variable | Status | Description |
 | :--- | :--- | :--- |
-| `DATASET_ROOT` | Required | Absolute path to the root folder containing the image data sub‑folders (`train/`, `test/`). The code uses this variable to locate images during ingestion and preprocessing. |
+| `DATA_ROOT` | Required | Absolute path to the directory containing the raw image dataset. The data‑preprocessing module reads images from this location. |
+| `CUDA_VISIBLE_DEVICES` | Optional | Comma‑separated list of GPU device IDs to make visible to PyTorch (e.g., `0,1`). Required only when training on GPU. |
 
 
 ## Local Setup & Development
 1. 1. Clone the repository:
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. Create and activate a Python virtual environment:
-3.    - Using **venv**:
-     ```bash
-     python3 -m venv .venv
-     source .venv/bin/activate   # Linux/macOS
-     .venv\Scripts\activate    # Windows PowerShell
-     ```
-4.    - Using **conda** (if preferred):
-     ```bash
-     conda create -n dogcat python=3.9
-     conda activate dogcat
-     ```
-5. 3. Install the required packages:
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-6. 4. (Optional) Install Jupyter Lab/Notebook for the exploratory notebook:
-   ```bash
-   pip install jupyterlab
-   ```
-7. 5. Prepare the image dataset:
-   - Place the raw image folders (e.g., `train/dog`, `train/cat`, `test/dog`, `test/cat`) under a directory of your choice.
-   - Set the absolute path to this directory in the environment variable `DATASET_ROOT` (see *Environment Variables* below).
-   - If you do not have a dataset yet, you can download the standard Kaggle "Dogs vs. Cats" dataset and extract it.
-   - Ensure the folder structure matches the expectations of the ingestion code in `src/convolutional_neural_network.py`.
-   
-8. 6. Verify the installation by running a quick sanity‑check script (see *Local Development Loop*).
-   ```bash
-   python src/convolutional_neural_network.py --dry-run
-   ```
+2.    ```
+3.    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+4.    cd dog-vs-cat-cnn
+5.    ```
+6. 2. Create and activate a Python virtual environment:
+7.    ```
+8.    python -m venv .venv
+9.    # On Windows
+10.    .venv\Scripts\activate
+11.    # On macOS/Linux
+12.    source .venv/bin/activate
+13.    ```
+14. 3. Install the required Python packages:
+15.    ```
+16.    pip install --upgrade pip
+17.    pip install -r requirements.txt
+18.    ```
+19. 4. (Optional) Verify GPU availability:
+20.    ```
+21.    python -c "import torch; print(torch.cuda.is_available())"
+22.    ```
+23. 5. Prepare the dataset:
+24.    - Place the `train` and `validation` image folders (or a single dataset folder) under a directory of your choice.
+25.    - Note the absolute path; it will be used as the `DATA_ROOT` environment variable (see below).
 
 ## Running Tests
 ```bash
-Run the training script on a reduced dataset to verify the pipeline works end‑to‑end:
+There are no dedicated unit‑test files in this repository. Validation of the pipeline can be performed by executing a short training run on a subset of the data:
 ```bash
-# Use a small subset for quick feedback (e.g., 200 images per class)
-python src/convolutional_neural_network.py \
+python src/convolutional_neural_network.py train \
+    --data_dir ./processed_data \
     --epochs 2 \
-    --batch-size 32 \
-    --learning-rate 0.001 \
-    --max-samples-per-class 200
+    --batch_size 8 \
+    --learning_rate 0.001 \
+    --checkpoint_dir ./tmp_checkpoints
 ```
-The script prints training/validation loss and accuracy after each epoch. A successful run ends with a summary like:
-```
-Training completed. Final validation accuracy: 0.xx
-```
+If the script finishes without errors and a checkpoint file appears in `./tmp_checkpoints`, the core pipeline is functional.
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'torch' (or 'tensorflow/keras')
-**Resolution:** Ensure the Python environment is activated and that `requirements.txt` has been installed. Re‑run `pip install -r requirements.txt`. If you need GPU support, install the appropriate CUDA‑compatible version of PyTorch (`pip install torch==<version>+cuXX -f https://download.pytorch.org/whl/torch_stable.html`).
+### ImportError: No module named 'torch'
+**Resolution:** Ensure that PyTorch is installed. Run `pip install torch torchvision` (or follow the PyTorch website for a GPU‑compatible wheel).
 
-### FileNotFoundError: Could not find dataset directory
-**Resolution:** Verify that `DATASET_ROOT` points to the correct absolute path and that the directory contains the expected sub‑folders (`train/`, `test/`). You can echo the variable to confirm:
-```bash
-echo $DATASET_ROOT
+### CUDA runtime error – out of memory
+**Resolution:** Reduce `--batch_size` or switch to CPU by unsetting `CUDA_VISIBLE_DEVICES` and adding `--device cpu` if the script supports it.
+
+### FileNotFoundError for image paths
+**Resolution:** Verify that the `DATA_ROOT` environment variable points to the correct dataset directory and that the expected sub‑folders (`train`, `validation`) exist.
+
+### Jupyter notebook cannot locate the source modules
+**Resolution:** Start the notebook from the repository root (as shown above) or add the repo root to `sys.path` inside the notebook:
+```python
+import sys, os
+sys.path.append(os.path.abspath('..'))
 ```
 
-### CUDA out of memory / torch.cuda.CudaError
-**Resolution:** Reduce the `--batch-size` argument, or run the script on CPU by adding the flag `--device cpu`. Ensure that other GPU processes are not hogging memory.
-
-### ValueError: Unexpected number of channels in image (e.g., 4 instead of 3)
-**Resolution:** The preprocessing step expects RGB images. Remove or convert images with an alpha channel (e.g., PNG with transparency) to standard 3‑channel JPEGs before training.
-
-### Training loop hangs or runs extremely slowly
-**Resolution:** Check that the data loader is not bottlenecked by disk I/O. If using a large dataset on a mechanical HDD, consider copying a smaller subset to an SSD for development. Also, confirm that `--num-workers` (if exposed) matches the number of CPU cores you wish to use.
+### Training script exits immediately with no output
+**Resolution:** Check that the required command‑line arguments (`--data_dir`, etc.) are provided. Run `python src/convolutional_neural_network.py --help` to view the expected interface.
 
 

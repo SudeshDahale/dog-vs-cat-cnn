@@ -1,85 +1,85 @@
 # Dog vs Cat CNN – Developer Runbook
 
 ## Prerequisites
-- Python 3.8 or higher installed on your system.
-- Git client for cloning the repository.
-- Access to a GPU (optional but recommended) with CUDA drivers for accelerated training.
-- Sufficient disk space to store the Cat vs Dog dataset (≈ 800 MB).
+- Git
+- Python 3.8+ installed on the development machine
+- Virtual environment tool (venv or conda)
+- Access to the image dataset (e.g., a folder containing `train/` and `validation/` sub‑folders)
 
 ## Environment Variables
 | Variable | Status | Description |
 | :--- | :--- | :--- |
-| `DATA_ROOT` | Optional | Absolute path to the root folder that contains the `train/` and `val/` sub‑folders. If omitted, the code falls back to `./data` relative to the repository root. |
+| `DATA_ROOT` | Optional | Absolute path to the root folder that contains the raw image dataset. The data‑prep module will look for `train/` and `validation/` sub‑folders inside this directory. |
 
 
 ## Local Setup & Development
-1. 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. **Create and activate a virtual environment**
-   ```bash
-   python -m venv .venv
-   # Windows
-   .venv\Scripts\activate
-   # macOS / Linux
-   source .venv/bin/activate
-   ```
-3. 3. **Install the Python dependencies**
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-4. 4. **Download the dataset**
-   - The project expects the dataset under `data/` with the following structure:
-     ```
-     data/
-       train/
-         cats/
-         dogs/
-       val/
-         cats/
-         dogs/
-     ```
-   - If you do not have the dataset, download it from Kaggle ("Dogs vs. Cats") and extract it to the `data/` folder.
-   - Alternatively, set the `DATA_ROOT` environment variable to point to any directory that follows the above layout.
-   
-5. 5. **Verify the installation**
-   ```bash
-   python -c "import src.convolutional_neural_network as cnn; print('Import OK')"
-   ```
-6. 6. **Run the notebook (optional)**
-   ```bash
-   jupyter notebook src/notebooks/convolutional_neural_network.ipynb
-   ```
+1. 1. Clone the repository
+2. ```bash
+git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+cd dog-vs-cat-cnn
+```
+3. 2. Create and activate a virtual environment
+4. ```bash
+# Using venv
+python -m venv .venv
+source .venv/bin/activate   # On Windows use `.venv\Scripts\activate`
+
+# Or using conda
+conda create -n dogcatcnn python=3.8 -y
+conda activate dogcatcnn
+```
+5. 3. Install the Python dependencies defined in `requirements.txt`
+6. ```bash
+pip install -r requirements.txt
+```
+7. 4. (Optional) Export any environment variables required for data locations – see the "Environment Variable Configuration" section.
+8. 5. Verify the installation by running the sanity‑check script (if present) or importing the main module:
+9. ```bash
+python -c "import src.convolutional_neural_network as cnn; print('Import successful')"
+```
 
 ## Running Tests
 ```bash
-python -m unittest discover -s tests || echo 'No test suite found – repository is primarily experimental.'
+There is no dedicated unit‑test suite in this repository. The quickest way to verify that the workflow is functional is to run a short end‑to‑end training and evaluation cycle on a small subset of the data:
+```bash
+# Step 1 – Prepare the data (the script respects the DATA_ROOT env var if set)
+python src/data_preparation.py   # If the file exists; otherwise skip – the training script will load data directly.
+
+# Step 2 – Train the CNN for a few epochs (use a reduced batch size for speed)
+python src/convolutional_neural_network.py --epochs 2 --batch-size 16
+
+# Step 3 – Evaluate the trained model
+python src/evaluation.py --model-path outputs/model.h5
+```
+If the notebook is preferred, you can launch it locally:
+```bash
+jupyter notebook src/notebooks/convolutional_neural_network.ipynb
+```
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'src'
-**Resolution:** Make sure you are running commands from the repository root and that the virtual environment is activated. The `src` package is a top‑level module; you can also add the repository root to `PYTHONPATH`:
+### ImportError / ModuleNotFoundError for packages listed in `requirements.txt`.
+**Resolution:** Ensure the virtual environment is activated (`source .venv/bin/activate` or `conda activate dogcatcnn`) and that `pip install -r requirements.txt` completed without errors. Re‑run the install command if any packages failed.
+
+### CUDA/GPU related error when running the training script.
+**Resolution:** The repository falls back to CPU if a compatible GPU is not detected. If you intended to use GPU, verify that the correct version of `tensorflow`/`torch` (as specified in `requirements.txt`) matches your CUDA driver. Alternatively, force CPU execution by setting the environment variable `CUDA_VISIBLE_DEVICES=` (empty) before running the script.
+
+### FileNotFoundError: Unable to locate training images.
+**Resolution:** Either place your image dataset under a folder named `data/` at the repository root with `train/` and `validation/` sub‑folders, or export the absolute path to your dataset via the `DATA_ROOT` environment variable before invoking any script:
 ```bash
-export PYTHONPATH=$(pwd):$PYTHONPATH
+export DATA_ROOT=/absolute/path/to/your/dataset
 ```
 
-### torch.cuda.is_available() returns False despite having a GPU
-**Resolution:** Verify that the correct CUDA toolkit version matches the PyTorch wheel installed. Reinstall PyTorch with the appropriate CUDA version, e.g.:
+### Jupyter notebook fails to import `src` modules (ImportError: No module named 'src').
+**Resolution:** Launch the notebook from the repository root so that Python’s module search path includes the `src` package, or add the repository root to `PYTHONPATH`:
 ```bash
-pip uninstall torch torchvision torchaudio -y
-pip install torch==2.2.0+cu121 torchvision==0.17.0+cu121 torchaudio==2.2.0 --extra-index-url https://download.pytorch.org/whl/cu121
+export PYTHONPATH=$(pwd)
 ```
 
-### FileNotFoundError: Dataset directory not found
-**Resolution:** Either place the dataset under `./data` following the expected structure or set the `DATA_ROOT` environment variable to the correct location before running any script.
+### Training script exits immediately without training.
+**Resolution:** Check that the script received the expected command‑line arguments. Run the script with the `--help` flag to view usage:
 ```bash
-export DATA_ROOT=/path/to/your/dataset
+python src/convolutional_neural_network.py --help
 ```
-
-### MemoryError while loading images
-**Resolution:** The data‑preprocessing module loads images in batches. Reduce the `BATCH_SIZE` constant in `src/convolutional_neural_network.py` or increase your system’s swap space.
 
 

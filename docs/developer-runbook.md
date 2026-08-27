@@ -1,93 +1,46 @@
-# Developer Runbook – dog-vs-cat-cnn
+# Dog vs Cat CNN Development Runbook
 
 ## Prerequisites
-- Git
-- Python 3.8 or newer
-- Virtual environment tool (venv, virtualenv, or conda)
-- Git Large File Storage (optional, if dataset stored via LFS)
-- Access to a GPU (recommended for training, but not required for development)
+- Python 3.8 or higher
+- git
+- virtualenv or conda
+- CUDA-enabled GPU (optional for faster training)
 
 ## Environment Variables
 | Variable | Status | Description |
 | :--- | :--- | :--- |
-| `DATA_ROOT` | Optional | Root directory for the dataset. If set, the training script will read images from `${DATA_ROOT}/train` and `${DATA_ROOT}/validation`. |
+| `DATA_DIR` | Required | Absolute path to the directory containing the training and validation image folders (e.g., /path/to/dataset) |
 
 
 ## Local Setup & Development
-1. 1. Clone the repository:
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. Create and activate a virtual environment:
-3.    ```bash
-   python -m venv .venv
-   # On macOS/Linux
-   source .venv/bin/activate
-   # On Windows
-   .venv\Scripts\activate
-   ```
-4. 3. Install the Python dependencies defined in `requirements.txt`:
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-5. 4. (Optional) Install Jupyter Lab/Notebook if you intend to run the exploratory notebook:
-   ```bash
-   pip install notebook   # or `pip install jupyterlab`
-   ```
-6. 5. Download the Dogs vs. Cats dataset and place it under a `data/` directory at the repository root. The expected structure is:
-   ```
-   data/
-   ├── train/
-   │   ├── dogs/
-   │   └── cats/
-   └── validation/
-       ├── dogs/
-       └── cats/
-   ```
-7. 6. Verify the installation by running a quick sanity‑check script (provided in `src/convolutional_neural_network.py`):
-   ```bash
-   python - <<'PY'
-   from src.convolutional_neural_network import build_model
-   model = build_model()
-   model.summary()
-   PY
-   ```
+1. git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+2. cd dog-vs-cat-cnn
+3. python -m venv venv   # or conda create -n dogcat python=3.8
+4. source venv/bin/activate   # on Windows use venv\Scripts\activate
+5. pip install -r requirements.txt
+6. export DATA_DIR=/full/path/to/your/dataset   # adjust to your environment
+7. # Verify dataset structure: $DATA_DIR/train/dog, $DATA_DIR/train/cat, $DATA_DIR/val/dog, $DATA_DIR/val/cat
+8. # Run a quick sanity check by training a small model
+9. python src/convolutional_neural_network.py --epochs 1 --batch-size 8
+10. # Launch Jupyter for notebook exploration
+11. jupyter notebook src/notebooks/convolutional_neural_network.ipynb
 
 ## Running Tests
 ```bash
-There are no dedicated unit‑test files in this repository. The recommended "test" is to run a short training epoch to ensure the pipeline works:
-```bash
-python src/convolutional_neural_network.py \
-    --data-dir data \
-    --epochs 1 \
-    --batch-size 32
-```
-If the script finishes without errors and prints validation accuracy, the development environment is correctly set up.
+python -m pytest || echo "No test suite found; run the training script to validate functionality"
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'src'
-**Resolution:** Make sure you are running commands from the repository root and that the virtual environment is activated. The `src` directory is a package; you may need to add the repository root to `PYTHONPATH`:
-```bash
-export PYTHONPATH=$(pwd)
-```
+### ImportError: No module named 'tensorflow' or 'torch'
+**Resolution:** Ensure the virtual environment is activated and all dependencies are installed via pip install -r requirements.txt. If using GPU, install the matching CUDA version of the deep‑learning framework.
 
-### ModuleNotFoundError: No module named 'tensorflow' (or 'torch')
-**Resolution:** The project depends on a deep‑learning framework listed in `requirements.txt`. Re‑run `pip install -r requirements.txt` inside the activated virtual environment. Verify the correct Python version (>=3.8).
+### CUDA driver not found or GPU not detected
+**Resolution:** Install the appropriate NVIDIA driver and CUDA toolkit, or run the script with the flag --device cpu to force CPU execution.
 
-### FileNotFoundError: Dataset directory not found
-**Resolution:** Ensure the Dogs vs. Cats dataset is downloaded and placed under a `data/` folder as described in step 5. Alternatively, set the `DATA_ROOT` environment variable to point to the correct location.
+### Dataset not found or path errors
+**Resolution:** Set the DATA_DIR environment variable to point to the root folder containing train/ and val/ subfolders. Verify folder names and image file permissions.
 
-### Jupyter notebook cannot find `src` modules
-**Resolution:** Launch the notebook from the repository root and set the kernel’s working directory accordingly. You can also add the following at the top of the notebook:
-```python
-import sys, os
-sys.path.append(os.path.abspath('..'))
-```
-
-### Training is extremely slow or runs out of memory
-**Resolution:** If a GPU is available, ensure the appropriate drivers and CUDA/cuDNN libraries are installed. Otherwise, reduce `--batch-size` or use a smaller image size in the training script.
+### Jupyter notebook kernel dies when loading large tensors
+**Resolution:** Increase the memory limit or run the notebook on a machine with more RAM. Alternatively, reduce batch size or image resolution in the notebook parameters.
 
 

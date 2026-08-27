@@ -1,19 +1,22 @@
 # Dog vs Cat CNN
 
-A Python monolithic CNN pipeline for classifying dog and cat images.
+A Python CNN that classifies images as dogs or cats.
 
 ## Overview
 
-This repository implements a complete end‑to‑end workflow for training a convolutional neural network (CNN) to distinguish between dog and cat images. It follows a monolithic ML‑workflow architecture: data preprocessing, model definition/training, and evaluation are each encapsulated in dedicated modules under `src/`, with an accompanying Jupyter notebook for interactive exploration and visualization.
+This repository provides a complete, monolithic implementation of a convolutional neural network (CNN) for binary image classification of dogs and cats. The core training logic lives in `src/convolutional_neural_network.py`, while an accompanying Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) offers step‑by‑step exploration, visualization, and interactive experimentation.
+
+The project is designed for batch‑style machine‑learning workflows: you can train the model on a dataset, evaluate its performance, and export the trained weights for downstream inference.
+
 
 ## Features
 
-- Loads and preprocesses raw image datasets for training and validation (data‑prep module).
-- Defines a configurable CNN architecture using Keras/TensorFlow (cnn‑model module).
-- Trains the model with support for early stopping and checkpointing, saving the best weights.
-- Evaluates model performance on a hold‑out test set, producing accuracy, loss curves, and confusion matrices (evaluation module).
-- Generates visualizations of training history and sample predictions.
-- Provides an interactive Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) for step‑by‑step experimentation.
+- Full CNN architecture (convolution, pooling, fully‑connected layers) implemented in pure Python with TensorFlow/Keras.
+- Training loop with configurable hyper‑parameters (learning rate, epochs, batch size).
+- Data preprocessing utilities for image resizing, normalization, and train/validation split.
+- Model checkpointing and early‑stopping callbacks to prevent over‑fitting.
+- Jupyter notebook that visualizes training curves, sample predictions, and model architecture.
+- Requirements file pinning all necessary libraries for reproducible environments.
 
 ## Quick Start
 
@@ -23,23 +26,24 @@ This repository implements a complete end‑to‑end workflow for training a con
 git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
 cd dog-vs-cat-cnn
 
-# Create a virtual environment and install dependencies
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-pip install --upgrade pip
+# Create a virtual environment (optional but recommended)
+python3 -m venv venv
+source venv/bin/activate   # On Windows use `venv\Scripts\activate`
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Run the end‑to‑end pipeline (data prep, training, evaluation)
-python src/convolutional_neural_network.py
+# Run the training script (provide your dataset path via the --data_dir argument)
+python src/convolutional_neural_network.py --data_dir /path/to/dog_cat_dataset
 
-# Or launch the notebook for interactive work
+# Launch the exploratory notebook
 jupyter notebook src/notebooks/convolutional_neural_network.ipynb
 ```
 ```
 
 ## Architecture
 
-The project follows a monolithic ML‑workflow architecture. The `src/` package contains three primary modules: `data-prep` for loading and preprocessing images, `cnn-model` for defining and training the convolutional network, and `evaluation` for assessing performance and generating visual reports. All modules share a common configuration and are orchestrated by the main script `convolutional_neural_network.py`. The Jupyter notebook mirrors this workflow, providing a step‑wise, visual interface for developers and researchers.
+The project follows a monolithic, batch‑oriented ML architecture. All model definition, data preprocessing, training, and evaluation code reside in a single Python module (`src/convolutional_neural_network.py`). The notebook serves as a thin, interactive wrapper that imports the same module, enabling reproducible experiments without duplicating logic. This design keeps the codebase simple, promotes reuse of the core CNN implementation, and aligns with typical batch training pipelines where a one‑off training run produces a saved model for later inference.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

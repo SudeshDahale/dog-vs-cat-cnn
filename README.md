@@ -1,18 +1,18 @@
 # Dog vs Cat CNN
 
-A simple convolutional neural network for classifying dog and cat images.
+A simple Convolutional Neural Network for classifying dog and cat images using TensorFlow/Keras.
 
 ## Overview
 
-This repository provides a lightweight, end‑to‑end implementation of a convolutional neural network (CNN) that distinguishes between dog and cat images. The codebase follows a monolithic ML‑pipeline structure: data loading and preprocessing utilities, model definition and training logic, and an interactive Jupyter notebook for experimentation and visualising training metrics. All components live under the `src/` package, making it easy to run the full training loop or explore the model step‑by‑step.
+This repository provides a minimal end‑to‑end example of training a convolutional neural network to distinguish dogs from cats. The core model logic lives in a Python script under `src/`, while an interactive Jupyter notebook under `src/notebooks/` walks through data loading, model construction, training, and visualisation of results. All dependencies are listed in `requirements.txt`, making the project easy to set up and run locally.
 
 ## Features
 
-- Python implementation of a CNN architecture tailored for binary image classification.
-- Data loading module that reads image files, resizes them, and applies standard augmentations (normalisation, random flip, rotation).
-- Training script (`src/convolutional_neural_network.py`) that manages the training loop, validation, checkpointing, and metric logging.
-- Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) for interactive exploration, visualising loss/accuracy curves, and quick inference on sample images.
-- Requirements file pinning all necessary libraries (TensorFlow/Keras, NumPy, pandas, matplotlib, etc.).
+- CNN architecture defined in pure TensorFlow/Keras with configurable layers and hyper‑parameters.
+- Training pipeline that loads the classic dog‑vs‑cat image dataset, preprocesses images, and saves trained model weights.
+- Jupyter notebook for step‑by‑step exploration, including data inspection, model training progress, and prediction visualisation.
+- Requirements file pinning exact library versions for reproducible results.
+- Model checkpoint saving for later inference or further fine‑tuning.
 
 ## Quick Start
 
@@ -23,27 +23,23 @@ git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
 cd dog-vs-cat-cnn
 
 # Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+python3 -m venv venv
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the training script (default dataset path expects `data/` folder with `train/` and `val/` subfolders)
-python -m src.convolutional_neural_network
+# Run the training script (adjust dataset path as needed)
+python src/convolutional_neural_network.py
 
-# Launch the experiment notebook
+# Or launch the interactive notebook
 jupyter notebook src/notebooks/convolutional_neural_network.ipynb
 ```
 ```
 
 ## Architecture
 
-The project is organised as a single monolithic Python package (`src/`).
-- **Data Loading & Preprocessing** – Functions read image files from a directory tree, resize to a fixed shape, normalise pixel values, and optionally apply augmentations. This module supplies `tf.data.Dataset` objects used by the trainer.
-- **Model Definition & Training** – The CNN architecture (convolutional layers, pooling, dropout, and dense head) is defined using TensorFlow/Keras. A training loop orchestrates epoch iteration, loss computation, back‑propagation, validation, and model checkpoint saving.
-- **Experiment Notebook** – A Jupyter notebook imports the same modules, reproduces the training pipeline, and adds visualisation cells for loss/accuracy plots, confusion matrices, and sample predictions.
-All three layers share the same codebase, ensuring reproducibility between script‑based runs and notebook experiments.
+The project follows a monolithic ML‑pipeline design: `src/convolutional_neural_network.py` contains the model definition, data preprocessing, training loop and weight serialization. The notebook `src/notebooks/convolutional_neural_network.ipynb` imports this script to reuse the same pipeline while providing inline visualisation and interactive experimentation. No separate services or micro‑services are involved; all code runs in a single Python environment.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

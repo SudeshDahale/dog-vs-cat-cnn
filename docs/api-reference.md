@@ -1,10 +1,10 @@
-# Dog vs Cat CNN - API Reference
+# Dog vs Cat CNN Repository
 
 **Base URL:** `http://localhost:8000/api`  
 **Authentication:** Bearer JWT Token or Session Cookie
 
 ## Overview
-The `dog-vs-cat-cnn` repository implements a monolithic machine‑learning pipeline for training a convolutional neural network that classifies images of dogs and cats. It does not expose an HTTP service; its public interface consists of Python modules and a Jupyter notebook. Consequently, there are no HTTP endpoints, request parameters, or response payloads to document. The reference below outlines the callable Python API provided by the source code.
+This repository provides a Python implementation of a convolutional neural network for binary classification of dog and cat images, plus a Jupyter notebook for interactive exploration. It operates as a local ML pipeline and does not expose any HTTP endpoints; all functionality is accessed through the Python scripts and notebook.
 
 ## Endpoints
 No endpoints mapped.

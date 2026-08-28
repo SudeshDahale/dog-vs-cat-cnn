@@ -1,77 +1,73 @@
-# Dog vs Cat CNN Repository – Developer Runbook
+# Developer Runbook – dog-vs-cat-cnn
 
 ## Prerequisites
-- Git installed (for cloning the repository)
-- Python 3.9+ installed and available in PATH
-- pip (Python package installer)
-- Virtual environment tool (venv or conda)
-- For GPU acceleration (optional): NVIDIA driver, CUDA Toolkit, and cuDNN compatible with TensorFlow version specified in requirements.txt
-
-## Environment Variables
-| Variable | Status | Description |
-| :--- | :--- | :--- |
-| `DATA_DIR` | Optional | Path to the root folder containing the `train` and `validation` sub‑folders of the dog‑vs‑cat image dataset. If omitted, the script defaults to `./data`. |
-| `MODEL_OUTPUT_DIR` | Optional | Directory where trained model weights and checkpoint files will be saved. Defaults to `./models` if not set. |
-
+- Git
+- Python 3.8 or newer
+- Virtual environment tool (venv, virtualenv, or conda)
+- Internet connection (to install packages and optionally download the dataset)
+- Optional: NVIDIA GPU with CUDA drivers (for faster training)
 
 ## Local Setup & Development
-1. 1. Clone the repository:
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. Create and activate a virtual environment (using venv):
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate   # On Windows use `.venv\Scripts\activate`
-   ```
-3. 3. Install the Python dependencies defined in `requirements.txt`:
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-4. 4. Verify TensorFlow installation (CPU vs GPU). In a Python REPL run:
-   ```python
-   import tensorflow as tf
-   print(tf.__version__)
-   print('GPU available:', tf.config.list_physical_devices('GPU'))
-   ```
-5. 5. (Optional) Download the Dog vs Cat dataset if not already present. The repository expects the dataset under `data/` – follow the instructions in the notebook `src/notebooks/convolutional_neural_network.ipynb` to download and extract it.
-6. 6. Run the model script to ensure the pipeline works end‑to‑end:
-   ```bash
-   python src/convolutional_neural_network.py --train --epochs 1
-   ```
-   This will train for a single epoch and write model weights to `models/` (or the path defined inside the script).
-7. 7. Open the exploratory Jupyter notebook for interactive development:
-   ```bash
-   jupyter notebook src/notebooks/convolutional_neural_network.ipynb
-   ```
-   Execute cells sequentially to explore data loading, model architecture, training metrics, and visualisations.
+1. 1. **Clone the repository**
+2.    ```bash
+3.    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+4.    cd dog-vs-cat-cnn
+5.    ```
+6. 
+7. 2. **Create and activate a virtual environment** (recommended)
+8.    ```bash
+9.    # Using venv (built‑in)
+10.    python3 -m venv .venv
+11.    source .venv/bin/activate   # macOS / Linux
+12.    .\\venv\\Scripts\\activate # Windows
+13. 
+14.    # Or using conda
+15.    conda create -n dog-cat-cnn python=3.9 -y
+16.    conda activate dog-cat-cnn
+17.    ```
+18. 
+19. 3. **Install Python dependencies**
+20.    ```bash
+21.    pip install --upgrade pip
+22.    pip install -r requirements.txt
+23.    ```
+24. 
+25. 4. **(Optional) Install Jupyter Notebook for the exploratory notebook**
+26.    ```bash
+27.    pip install notebook  # already in requirements, but explicit if you need it
+28.    ```
+29. 
+30. 5. **(Optional) Acquire the Dogs vs Cats dataset**
+31.    - The training script expects a folder `data/` with sub‑folders `train/` and `validation/` containing images.
+32.    - You can download the Kaggle “Dogs vs Cats” dataset and unzip it:
+33.      ```bash
+34.      mkdir -p data/train data/validation
+35.      # Example using Kaggle CLI (requires kaggle API token)
+36.      kaggle competitions download -c dogs-vs-cats
+37.      unzip dogs-vs-cats.zip -d data
+38.      # Then split the images into train/validation as you prefer
+39.      ```
+40.    - If you do not provide a dataset, the script will raise a clear `FileNotFoundError`.
 
 ## Running Tests
 ```bash
-There are no dedicated unit tests for this repository. A quick sanity‑check can be performed by running the script with a reduced dataset and a single epoch:
-```bash
-python src/convolutional_neural_network.py --train --epochs 1 --batch_size 16
-```
-Successful execution and the creation of a weight file indicates the core pipeline is functional.
+No automated test suite is shipped with this repository.  The primary way to verify a working environment is to run the training script (see *Local Development Loop* below) and confirm that it starts without import or runtime errors.
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'tensorflow'
-**Resolution:** Ensure the virtual environment is activated and that `tensorflow` (or `tensorflow-gpu` for GPU support) is listed in `requirements.txt`. Re‑run `pip install -r requirements.txt` inside the active environment.
+### ImportError: No module named <package>
+**Resolution:** Make sure you activated the virtual environment before running any Python command. Re‑run `source .venv/bin/activate` (or the conda activate command) and reinstall dependencies with `pip install -r requirements.txt`.
 
-### TensorFlow reports "Failed to load the CUDA driver" even though a GPU is present.
-**Resolution:** Confirm that the NVIDIA driver, CUDA Toolkit, and cuDNN versions match the TensorFlow build you installed. Refer to TensorFlow's compatibility matrix and install the matching versions, or fall back to CPU‑only TensorFlow by installing `tensorflow-cpu`.
+### torch.cuda.is_available() returns False on a GPU‑enabled machine
+**Resolution:** Verify that the correct CUDA toolkit version is installed and that the NVIDIA driver matches the version required by the PyTorch wheel. Re‑install PyTorch with the appropriate CUDA build, e.g.: `pip install torch==2.2.0+cu121 -f https://download.pytorch.org/whl/torch_stable.html`.
 
-### Training script aborts with "FileNotFoundError: [Errno 2] No such file or directory: 'data/..."
-**Resolution:** Set the `DATA_DIR` environment variable to point at the folder that contains the extracted image dataset, or place the dataset under the repository's default `./data` directory. Follow the download instructions inside the Jupyter notebook.
+### FileNotFoundError: [Errno 2] No such file or directory: 'data/train/'
+**Resolution:** Create the expected data directory structure and place the training images there, or edit `src/convolutional_neural_network.py` to point to the correct path.
 
-### Jupyter notebook cannot find the `src` module when importing `convolutional_neural_network`.
-**Resolution:** Start the notebook from the repository root (`dog-vs-cat-cnn`) so that the Python path includes the `src` package, or add the following to a notebook cell before imports:
-```python
-import sys, os
-sys.path.append(os.path.abspath('../src'))
-```
+### MemoryError or extremely slow training on CPU
+**Resolution:** Reduce the batch size in the script (e.g., `batch_size = 16`) or switch to a GPU. If you must stay on CPU, consider using a smaller model architecture.
+
+### Jupyter notebook refuses to start or shows `ImportError` for project modules
+**Resolution:** Start the notebook from the repository root so that `src/` is on the Python path, or add the repository root to `PYTHONPATH` before launching Jupyter:
 
 

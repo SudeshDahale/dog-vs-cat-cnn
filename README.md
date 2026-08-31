@@ -1,44 +1,28 @@
 # Dog vs Cat CNN
 
-A lightweight convolutional neural network for binary dog‑cat image classification.
+A simple convolutional neural network that classifies images as dogs or cats.
 
 ## Overview
 
-This repository implements a simple yet effective convolutional neural network (CNN) that distinguishes between dog and cat images. The codebase is organized as a monolithic Python project that performs batch processing of image datasets for training and evaluation. An accompanying Jupyter notebook provides an interactive environment for exploratory data analysis, model visualization, and step‑by‑step experimentation.
+This repository implements a binary image classifier using a convolutional neural network (CNN) built with TensorFlow/Keras. The codebase is organized as a single monolithic Python package under the src directory, containing a data‑loading pipeline, the model definition/training script, and a Jupyter notebook for exploratory analysis. All required dependencies are listed in requirements.txt, making the project easy to set up and run locally.
 
 ## Features
 
-- Defines a custom CNN architecture in `src/convolutional_neural_network.py` tailored for binary classification.
-- End‑to‑end training pipeline that loads images, preprocesses them, trains the model, evaluates validation accuracy, and persists the trained weights.
-- Configurable hyperparameters (learning rate, batch size, epochs) via command‑line arguments or a simple config section.
-- Comprehensive Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) for data exploration, training visualizations, and quick prototyping.
-- Dependency management through `requirements.txt` for reproducible environments.
+- Loads and preprocesses cat and dog image datasets with automatic resizing, normalization, and train/validation split.
+- Defines a configurable CNN architecture (conv layers, pooling, dropout, dense output) in src/convolutional_neural_network.py.
+- Trains the model with checkpointing and reports accuracy/loss on a validation set.
+- Provides an evaluation routine to predict on new images and compute classification metrics.
+- Includes src/notebooks/convolutional_neural_network.ipynb for interactive visualisation of training curves, sample predictions, and model debugging.
 
 ## Quick Start
 
 ```bash
-```bash
-# Clone the repository
-git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-cd dog-vs-cat-cnn
-
-# Create a virtual environment and install dependencies
-python -m venv venv
-source venv/bin/activate  # on Windows use `venv\Scripts\activate`
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# (Optional) Launch the exploratory notebook
-jupyter notebook src/notebooks/convolutional_neural_network.ipynb
-
-# Train the model (adjust arguments as needed)
-python src/convolutional_neural_network.py --data_dir path/to/dataset --epochs 20 --batch_size 32 --learning_rate 0.001
-```
+git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git && cd dog-vs-cat-cnn && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python src/convolutional_neural_network.py
 ```
 
 ## Architecture
 
-The project follows a monolithic structure with three primary components: (1) **Model Definition** – a Python module that builds the CNN layers using PyTorch/TensorFlow (as declared in `requirements.txt`); (2) **Training & Evaluation** – scripts that perform batch loading of image data, execute the training loop, compute validation metrics, and serialize the model weights; (3) **Exploratory Notebook** – an interactive Jupyter notebook that imports the same model code, enabling step‑wise execution, visual loss curves, and sample predictions. All components reside under the `src/` directory, keeping the codebase self‑contained for straightforward execution.
+The project follows a monolithic architecture where all components live under the src folder. The data loader prepares image tensors, which are fed into the CNN model defined in convolutional_neural_network.py. Training, validation, and inference logic are encapsulated in the same script, while the notebook offers a separate exploratory interface that imports the same modules for reproducible experimentation.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

@@ -1,79 +1,72 @@
-# Developer Runbook – dog-vs-cat-cnn
+# Developer Runbook for dog-vs-cat-cnn
 
 ## Prerequisites
-- Git installed (for cloning the repository)
+- Git
 - Python 3.8 or newer
-- pip (Python package installer)
-- Virtual environment tool (venv, virtualenv, or conda)
-- Access to a GPU with CUDA drivers (optional, for faster training)
+- Virtualenv (or Conda) for isolated Python environments
+- Access to the internet to download required packages and the dataset
 
 ## Environment Variables
 | Variable | Status | Description |
 | :--- | :--- | :--- |
-| `DATA_ROOT` | Optional | Root directory that contains the `train` and `val` sub‑folders with `dogs` and `cats` images. If not set, the code falls back to `./data`. |
+| `DATA_ROOT` | Required | Absolute or relative path to the folder that contains the `train` (and optionally `test`) sub‑folders with cat and dog images. |
+| `PYTHONPATH` | Optional | Ensures the `src` package is discoverable when launching notebooks or scripts from the repository root. |
 
 
 ## Local Setup & Development
-1. 1. Clone the repository:
+1. 1. **Clone the repository**
    ```bash
    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
    cd dog-vs-cat-cnn
    ```
-2. 2. Create and activate a virtual environment:
+2. 2. **Create and activate a virtual environment** (using `venv` as an example)
    ```bash
-   python -m venv .venv   # or `conda create -n dogcat python=3.9`
-   source .venv/bin/activate   # Windows: .venv\Scripts\activate
+   python -m venv .venv
+   source .venv/bin/activate   # On Windows: .venv\Scripts\activate
    ```
-3. 3. Install the required Python packages:
+3. 3. **Install the Python dependencies**
    ```bash
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
-4. 4. Verify the installation by importing the model module:
+4. 4. **Download the Cat vs. Dog dataset**
+   - The repository expects the raw images to be placed under a directory referenced by the `DATA_ROOT` environment variable (default: `./data`).
+   - You can obtain the dataset from Kaggle ("Dogs vs. Cats") or any compatible source. After download, extract the archives so that the structure resembles:
+     ```
+     data/
+       train/
+         cats/   # cat images
+         dogs/   # dog images
+       test/    # optional test images for inference
+     ```
+5. 5. **(Optional) Set environment variables**
+   - If you place the data in a location other than `./data`, export `DATA_ROOT` accordingly (see *Environment Variables* section).
+   - For Jupyter notebooks, you may also set `PYTHONPATH` to include the `src` package:
+     ```bash
+     export PYTHONPATH=$(pwd)/src:$PYTHONPATH
+     ```
+6. 6. **Run a quick sanity check**
    ```bash
-   python -c "import src.convolutional_neural_network as cnn; print('Import OK')"
+   python src/convolutional_neural_network.py --mode test
    ```
-5. 5. (Optional) If you have a CUDA‑capable GPU and want to use it, ensure the correct PyTorch build is installed. The `requirements.txt` pins the CPU‑only build; replace it with the appropriate `torch` wheel from https://pytorch.org/ for your CUDA version and reinstall:
-6.    ```bash
-   pip uninstall torch torchvision torchaudio
-   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118   # example for CUDA 11.8
-   ```
-7. 6. (Optional) Download or prepare the dog/cat image dataset. The training script expects a folder structure:
-   ```
-   data/
-     train/
-       dogs/
-       cats/
-     val/
-       dogs/
-       cats/
-   ```
-   Adjust the path in `src/convolutional_neural_network.py` if your data lives elsewhere.
+   This will load a small subset of the data, build the CNN model, and run a single forward pass to verify that the pipeline works.
 
 ## Running Tests
 ```bash
-python -m unittest discover -s tests || echo "No test suite found – run a quick training sanity check instead:"
-
-# Quick sanity check (runs a single epoch on a small subset)
-python src/convolutional_neural_network.py --epochs 1 --batch-size 8 --debug
+python -m unittest discover -s tests || echo "No unit tests found – run a quick training sanity check instead."
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'torch'
-**Resolution:** Ensure the virtual environment is activated and `torch` is installed via `pip install -r requirements.txt`. If you need GPU support, reinstall the correct CUDA‑compatible torch wheel as described in step 5.
+### ImportError: No module named 'cv2' or 'PIL'
+**Resolution:** Install the missing imaging libraries. For OpenCV: `pip install opencv-python`. For Pillow: `pip install Pillow`. On Linux you may also need system packages (`libjpeg-dev`, `zlib1g-dev`).
 
-### FileNotFoundError when loading data
-**Resolution:** Set the `DATA_ROOT` environment variable to point at the directory containing the `train`/`val` sub‑folders, or place the dataset under a `data/` folder at the project root.
+### FileNotFoundError: Dataset directory not found
+**Resolution:** Ensure the `DATA_ROOT` environment variable points to the correct location and that the directory contains `train/cats` and `train/dogs` sub‑folders. Verify with `ls $DATA_ROOT/train`.
 
-### CUDA out of memory error during training
-**Resolution:** Reduce the batch size (`--batch-size` flag) or switch to CPU by uninstalling the GPU torch build and reinstalling the CPU‑only version (`pip install torch==<version>+cpu`).
+### CUDA/cuDNN related errors when trying to use GPU
+**Resolution:** The code defaults to CPU if a compatible GPU is not detected. Either install a matching version of `torch`/`tensorflow` with CUDA support, or run the script with the `--device cpu` flag (if the script provides such an argument).
 
-### Jupyter notebook kernel dies when opening `src/notebooks/convolutional_neural_network.ipynb`
-**Resolution:** Make sure the notebook is launched from the activated virtual environment:
-   ```bash
-   source .venv/bin/activate
-   jupyter notebook
-   ```
-   Also verify that the notebook's import cells reference `src.convolutional_neural_network` correctly.
+### MemoryError when loading the full dataset
+**Resolution:** The data loader uses lazy loading, but if you force loading all images at once, memory can blow up. Reduce the batch size (`--batch-size`) or use a smaller subset of the data for development.
 
 

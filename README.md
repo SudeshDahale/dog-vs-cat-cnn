@@ -1,20 +1,18 @@
 # Dog vs Cat CNN
 
-A Python monolithic implementation of a convolutional neural network for binary image classification (dogs vs cats).
+A lightweight convolutional neural network for binary dog‑cat image classification.
 
 ## Overview
 
-This repository provides a self‑contained Python project that defines, trains, and evaluates a convolutional neural network (CNN) to distinguish between dog and cat images. The core logic lives in the `src` package, with a single module `convolutional_neural_network.py` that includes the model architecture, training loop, and evaluation utilities. An accompanying Jupyter notebook demonstrates usage and visualizes results.
-
-The project is structured as a monolith: all code, dependencies, and configuration are packaged together, making it easy to clone, install, and run end‑to‑end without additional services.
+This repository implements a simple yet effective convolutional neural network (CNN) that distinguishes between dog and cat images. The codebase is organized as a monolithic Python project that performs batch processing of image datasets for training and evaluation. An accompanying Jupyter notebook provides an interactive environment for exploratory data analysis, model visualization, and step‑by‑step experimentation.
 
 ## Features
 
-- CNN model definition using TensorFlow/Keras for binary classification
-- Training routine with configurable epochs, batch size, and learning rate
-- Evaluation utilities reporting accuracy, loss curves, and confusion matrix
-- Utility functions for data loading, preprocessing, and augmentation
-- Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) that walks through data exploration, model training, and result visualization
+- Defines a custom CNN architecture in `src/convolutional_neural_network.py` tailored for binary classification.
+- End‑to‑end training pipeline that loads images, preprocesses them, trains the model, evaluates validation accuracy, and persists the trained weights.
+- Configurable hyperparameters (learning rate, batch size, epochs) via command‑line arguments or a simple config section.
+- Comprehensive Jupyter notebook (`src/notebooks/convolutional_neural_network.ipynb`) for data exploration, training visualizations, and quick prototyping.
+- Dependency management through `requirements.txt` for reproducible environments.
 
 ## Quick Start
 
@@ -24,24 +22,23 @@ The project is structured as a monolith: all code, dependencies, and configurati
 git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
 cd dog-vs-cat-cnn
 
-# Create a virtual environment (optional but recommended)
+# Create a virtual environment and install dependencies
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-
-# Install required Python packages
+source venv/bin/activate  # on Windows use `venv\Scripts\activate`
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# Run the training script (modify arguments as needed)
-python src/convolutional_neural_network.py --data_dir path/to/dataset --epochs 20 --batch_size 32
-
-# Or launch the notebook to interactively explore the model
+# (Optional) Launch the exploratory notebook
 jupyter notebook src/notebooks/convolutional_neural_network.ipynb
+
+# Train the model (adjust arguments as needed)
+python src/convolutional_neural_network.py --data_dir path/to/dataset --epochs 20 --batch_size 32 --learning_rate 0.001
 ```
 ```
 
 ## Architecture
 
-The project follows a monolithic architecture: all functionality resides in a single Python package under `src`. The primary module `convolutional_neural_network.py` encapsulates model definition, training, and evaluation logic. No external services or micro‑service boundaries are required; the code runs as a stand‑alone script or within a notebook, directly accessing the local image dataset.
+The project follows a monolithic structure with three primary components: (1) **Model Definition** – a Python module that builds the CNN layers using PyTorch/TensorFlow (as declared in `requirements.txt`); (2) **Training & Evaluation** – scripts that perform batch loading of image data, execute the training loop, compute validation metrics, and serialize the model weights; (3) **Exploratory Notebook** – an interactive Jupyter notebook that imports the same model code, enabling step‑wise execution, visual loss curves, and sample predictions. All components reside under the `src/` directory, keeping the codebase self‑contained for straightforward execution.
 
 ---
 *This file is kept in sync by [AutoScribe](https://github.com) — edits here may be overwritten on the next sync.*

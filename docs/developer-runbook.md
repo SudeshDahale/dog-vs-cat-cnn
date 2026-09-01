@@ -1,72 +1,81 @@
-# Developer Runbook for dog-vs-cat-cnn
+# Dog vs Cat CNN - Developer Runbook
 
 ## Prerequisites
-- Git
+- Git installed (>=2.20)
 - Python 3.8 or newer
-- Virtualenv (or Conda) for isolated Python environments
-- Access to the internet to download required packages and the dataset
+- Virtual environment tool (venv or virtualenv)
+- Internet connectivity for pip package installation
+- Optional: NVIDIA GPU with compatible CUDA drivers (for GPU acceleration)
+- Access to the Dog vs Cat image dataset (Kaggle Dogs vs Cats or equivalent)
 
 ## Environment Variables
 | Variable | Status | Description |
 | :--- | :--- | :--- |
-| `DATA_ROOT` | Required | Absolute or relative path to the folder that contains the `train` (and optionally `test`) sub‑folders with cat and dog images. |
-| `PYTHONPATH` | Optional | Ensures the `src` package is discoverable when launching notebooks or scripts from the repository root. |
+| `DOG_CAT_DATA_DIR` | Required | Absolute path to the root folder that contains the `train/` and `validation/` image sub‑directories for the Dog vs Cat dataset. |
 
 
 ## Local Setup & Development
-1. 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
-   cd dog-vs-cat-cnn
-   ```
-2. 2. **Create and activate a virtual environment** (using `venv` as an example)
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate   # On Windows: .venv\Scripts\activate
-   ```
-3. 3. **Install the Python dependencies**
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-4. 4. **Download the Cat vs. Dog dataset**
-   - The repository expects the raw images to be placed under a directory referenced by the `DATA_ROOT` environment variable (default: `./data`).
-   - You can obtain the dataset from Kaggle ("Dogs vs. Cats") or any compatible source. After download, extract the archives so that the structure resembles:
-     ```
-     data/
-       train/
-         cats/   # cat images
-         dogs/   # dog images
-       test/    # optional test images for inference
-     ```
-5. 5. **(Optional) Set environment variables**
-   - If you place the data in a location other than `./data`, export `DATA_ROOT` accordingly (see *Environment Variables* section).
-   - For Jupyter notebooks, you may also set `PYTHONPATH` to include the `src` package:
-     ```bash
-     export PYTHONPATH=$(pwd)/src:$PYTHONPATH
-     ```
-6. 6. **Run a quick sanity check**
-   ```bash
-   python src/convolutional_neural_network.py --mode test
-   ```
-   This will load a small subset of the data, build the CNN model, and run a single forward pass to verify that the pipeline works.
+1. 1. Clone the repository:
+2.    ```
+3.    git clone https://github.com/SudeshDahale/dog-vs-cat-cnn.git
+4.    cd dog-vs-cat-cnn
+5.    ```
+6. 
+7. 2. Create and activate a virtual environment:
+8.    ```
+9.    python -m venv .venv            # create virtualenv in .venv directory
+10.    source .venv/bin/activate       # Linux/macOS
+11.    .\\venv\\Scripts\\activate   # Windows PowerShell
+12.    ```
+13. 
+14. 3. Install the required Python packages:
+15.    ```
+16.    pip install --upgrade pip
+17.    pip install -r requirements.txt
+18.    ```
+19. 
+20. 4. Download the Dog vs Cat dataset and place it in a known location, e.g.:
+21.    - `~/datasets/dog_vs_cat/` (contains `train/` and `validation/` sub‑folders).
+22. 
+23. 5. Configure the environment variable that points to the dataset root:
+24.    ```
+25.    export DOG_CAT_DATA_DIR=~/datasets/dog_vs_cat   # Linux/macOS
+26.    set DOG_CAT_DATA_DIR=%%USERPROFILE%%\datasets\dog_vs_cat   # Windows CMD
+27.    $env:DOG_CAT_DATA_DIR = "C:\datasets\dog_vs_cat"   # PowerShell
+28.    ```
+29. 
+30. 6. Verify the installation by running a quick training pass (1 epoch, small batch):
+31.    ```
+32.    python src/convolutional_neural_network.py \
+33.           --epochs 1 \
+34.           --batch-size 32 \
+35.           --data-dir $DOG_CAT_DATA_DIR
+36.    ```
+37. 
+38.    The script should download any missing pretrained weights, start training, and print the loss/accuracy for the epoch.
 
 ## Running Tests
 ```bash
-python -m unittest discover -s tests || echo "No unit tests found – run a quick training sanity check instead."
+There are no dedicated unit‑test suites in this prototype. To sanity‑check the code you can run a minimal training job:
+```bash
+python src/convolutional_neural_network.py --epochs 1 --batch-size 16 --data-dir $DOG_CAT_DATA_DIR
+```
 ```
 
 ## Troubleshooting
-### ImportError: No module named 'cv2' or 'PIL'
-**Resolution:** Install the missing imaging libraries. For OpenCV: `pip install opencv-python`. For Pillow: `pip install Pillow`. On Linux you may also need system packages (`libjpeg-dev`, `zlib1g-dev`).
+### ImportError / ModuleNotFoundError for tensorflow / keras / numpy etc.
+**Resolution:** Make sure the virtual environment is activated and that `pip install -r requirements.txt` completed without errors. Re‑run the install step or upgrade pip and retry.
 
-### FileNotFoundError: Dataset directory not found
-**Resolution:** Ensure the `DATA_ROOT` environment variable points to the correct location and that the directory contains `train/cats` and `train/dogs` sub‑folders. Verify with `ls $DATA_ROOT/train`.
+### RuntimeError: GPU device not found or CUDA related errors.
+**Resolution:** If you intend to run on GPU, verify that the CUDA toolkit and cuDNN versions match the TensorFlow build installed (see TensorFlow GPU compatibility matrix). Otherwise, force CPU execution by adding `--device cpu` flag (if supported) or uninstalling the GPU‑specific TensorFlow package.
 
-### CUDA/cuDNN related errors when trying to use GPU
-**Resolution:** The code defaults to CPU if a compatible GPU is not detected. Either install a matching version of `torch`/`tensorflow` with CUDA support, or run the script with the `--device cpu` flag (if the script provides such an argument).
+### FileNotFoundError: Dataset directory does not exist.
+**Resolution:** Confirm that the `DOG_CAT_DATA_DIR` environment variable points to the correct absolute path and that the directory contains `train/` and `validation/` sub‑folders with image files. Adjust the variable and restart the script.
 
-### MemoryError when loading the full dataset
-**Resolution:** The data loader uses lazy loading, but if you force loading all images at once, memory can blow up. Reduce the batch size (`--batch-size`) or use a smaller subset of the data for development.
+### MemoryError / OOM during training.
+**Resolution:** Reduce the batch size (`--batch-size`) or switch to CPU execution. For GPU runs, ensure the GPU has enough free memory or use gradient accumulation tricks (not implemented in this prototype).
+
+### The notebook `src/notebooks/convolutional_neural_network.ipynb` cannot locate the data.
+**Resolution:** Within the notebook, set the `data_dir` variable to the same path used for `DOG_CAT_DATA_DIR`, e.g.: `data_dir = os.getenv('DOG_CAT_DATA_DIR')` or manually assign the path.
 
 
